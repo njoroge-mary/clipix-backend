@@ -171,21 +171,14 @@ async def get_status_checks():
 # Include the router in the main app
 app.include_router(api_router)
 
+# CORS middleware configuration
+cors_origins = os.environ.get('CORS_ORIGINS', '*')
+origins_list = cors_origins.split(',') if cors_origins != '*' else ['*']
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=origins_list,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
