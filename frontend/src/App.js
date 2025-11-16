@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import HomePage from '@/pages/HomePage';
 import DashboardPage from '@/pages/DashboardPage';
+import VideoEditorPage from '@/pages/VideoEditorPage';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/editor" element={<VideoEditorPage />} />
           </Routes>
         </BrowserRouter>
         <Toaster position="top-right" richColors />
