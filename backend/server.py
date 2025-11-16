@@ -99,6 +99,45 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
+# Video Editor Models
+class VideoInfo(BaseModel):
+    video_id: str
+    filename: str
+    duration: float
+    width: int
+    height: int
+    fps: float
+    codec: str
+    has_audio: bool
+    file_size: int
+    thumbnail_url: Optional[str] = None
+    uploaded_at: datetime
+
+class TrimRequest(BaseModel):
+    video_id: str
+    start_time: float
+    end_time: float
+
+class CutSegment(BaseModel):
+    start: float
+    end: float
+
+class CutRequest(BaseModel):
+    video_id: str
+    segments: List[CutSegment]
+
+class CaptionRequest(BaseModel):
+    video_id: str
+    language: Optional[str] = None
+
+class JobStatus(BaseModel):
+    job_id: str
+    status: str  # pending, processing, completed, failed
+    progress: float
+    message: str
+    result: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
 # Health check endpoint
 @api_router.get("/health")
 async def health_check():
