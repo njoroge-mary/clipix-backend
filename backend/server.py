@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,21 +6,66 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
+from contextlib import asynccontextmanager
 
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# Create the main app without a prefix
-app = FastAPI()
+# Validate required environment variables
+required_env_vars = ['MONGO_URL', 'DB_NAME']
+missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
+if missing_vars:
+    raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
+
+# MongoDB connection (will be initialized in lifespan)
+client: Optional[AsyncIOMotorClient] = None
+db = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup and shutdown events"""
+    global client, db
+    
+    # Startup
+    try:
+        mongo_url = os.environ['MONGO_URL']
+        client = AsyncIOMotorClient(mongo_url)
+        db = client[os.environ['DB_NAME']]
+        
+        # Test the connection
+        await client.admin.command('ping')
+        logger.info("Successfully connected to MongoDB")
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {e}")
+        raise
+    
+    yield
+    
+    # Shutdown
+    if client:
+        client.close()
+        logger.info("MongoDB connection closed")
+
+
+# Create the main app with lifespan
+app = FastAPI(
+    title="Clipix API",
+    description="Backend API for Clipix application",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
