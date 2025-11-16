@@ -1,15 +1,23 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import shutil
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
+import asyncio
+import json
+
+# Import video processing modules
+from video_processor import VideoProcessor
+from caption_generator import CaptionGenerator
 
 
 ROOT_DIR = Path(__file__).parent
